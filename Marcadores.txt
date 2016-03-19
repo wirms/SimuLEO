@@ -1,0 +1,26 @@
+		gui.py
+
+menus 60
+guardar 120
+ventanaopciones 290
+ventanaresultados 360
+ventanamaniobras 660
+actualizararbol 830
+nuevosobjetos 900
+ventanapropiedades 1000
+botonesvarios 1420
+menuclickderecho 1440
+definiciones 1600
+gridsgenerales 1680
+actualizarcanvas 1700
+
+		integracion.py
+integrar 50
+f 170
+integradores 300
+xtogeo 350
+geotox 440
+trayectoriatrazas 450
+dibujartrazas 490
+radiotierra 550
+dibujarorbita 560

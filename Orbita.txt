@@ -1,0 +1,487 @@
+program paramorb
+
+implicit none
+
+!-------------------------------------
+! Interface
+    interface
+
+	function cross(A,B)
+
+		real*8 :: cross(3)
+		real*8 :: A(3)
+		real*8 :: B(3)
+    end function
+    function mod2(A)
+
+		real*8:: mod2
+    	real*8:: A(:)
+    end function
+    function girozxz(A,alpha, beta, gamma)
+		real*8:: girozxz(3)
+    	real*8:: A(:)
+    	real*8:: alpha
+    	real*8:: beta
+	    real*8:: gamma
+    end function
+
+	subroutine newtonkep(x0,e,M,tol,raiz,clave)
+
+	REAL*8, INTENT(IN) :: x0 ! Aproximación inicial a la raíz
+real*8 :: e
+real*8 :: M
+INTEGER:: n ! Límite de iteraciones/iteraciones realizadas
+REAL*8, INTENT(IN) :: tol ! Tolerancia para el error relativo
+REAL*8, INTENT(OUT) :: raiz ! Aproximación a la raíz
+INTEGER, INTENT(OUT) :: clave ! Clave de éxito:
+
+	end subroutine
+!subroutine cross(A,B,C)
+
+
+!real*8 :: C(3)
+!real*8 :: A(3)
+!real*8 :: B(3)
+!end subroutine
+
+!subroutine mod2(A,b)
+!	real*8:: b
+!    real*8:: A(:)
+!end subroutine
+
+    end interface
+
+!---------------------------------------------
+! Fin interface
+
+
+	real*8:: r(3)
+!    real*8:: modr0
+    real*8:: v(3)
+!    real*8:: modv0
+    real*8:: h(3)
+!    real*8:: modh
+!    real*8:: evec(3)
+    real*8:: e(3)
+    real*8:: Ener
+    real*8:: a
+    real*8:: c
+    real*8:: T
+    real*8:: n
+    
+    real*8:: u1(3)
+    real*8:: u2(3)
+    real*8:: u3(3)
+    real*8:: i1(3)
+    real*8:: j1(3)
+    real*8:: k1(3)
+    real*8:: n1(3)
+    
+
+    real*8:: dist
+    real*8:: theta
+    real*8:: AE
+    real*8:: tau
+    real*8:: M0
+    real*8:: i
+    real*8:: longnodasc
+    real*8:: p
+    real*8:: argper
+    real*8:: tiempo
+    real*8:: M
+    real*8:: u
+    real*8:: sector
+    integer:: error
+    integer:: j
+    character:: propagacion(1)
+
+
+
+    real*8, parameter:: mu=398601.3d0
+    real*8 :: pi
+
+    pi = 2*asin(1.0d0)
+
+    i1 = 0.0d0
+    j1 = 0.0d0
+    k1 = 0.0d0
+
+    i1(1) = 1.0d0
+    j1(2) = 1.0d0
+    k1(3) = 1.0d0
+
+    
+
+    write(*,*) "    Introduzca r0 (Km)"
+    write(*,*) "       x0 = "
+    read(*,*) r(1)
+	write(*,*) "       y0 = "
+    read(*,*) r(2)
+    write(*,*) "       z0 = "
+    read(*,*) r(3)
+
+    write(*,*) "--------------------------"
+
+    write(*,*) "    Introduzca v0 (Km/s)"
+    write(*,*) "       Vx0 = "
+    read(*,*) v(1)
+	write(*,*) "       Vy0 = "
+    read(*,*) v(2)
+    write(*,*) "       Vz0 = "
+    read(*,*) v(3)
+
+	call system ("cls") 
+
+	write(*,*) "---------------------------------------"
+    write(*,*) "---------------------------------------"
+    write(*,*) "              Procesando"  
+
+	h=cross(r,v)
+
+    e=-(r/mod2(r))-(cross(h,v)/mu)
+
+    Ener = dot_product(v,v)
+    Ener = Ener/2.0d0
+    Ener = Ener - (mu/mod2(r))
+    
+    a = -mu/(2.0d0*Ener)
+
+    c = mod2(e) * a
+
+	T = 2.0d0*pi
+    T = T*(((a**3.0d0)/mu)**0.5d0)
+
+    n = 2.0d0*pi/T
+
+    u1 = e/mod2(e)
+    u3 = h/mod2(h)
+	u2 = cross(u3,u1)
+
+    theta = dot_product(e,r)
+    theta = theta/((mod2(e))*(mod2(r)))
+    theta = acos(theta)
+	sector = dot_product(u3,cross(e,r))/(mod2(e)*mod2(r))
+
+    if (sector<0.0d0) then
+      theta = -theta
+	end if
+
+    if (theta<0.0d0) then
+      theta = 2.0d0*pi + theta
+    end if
+    
+
+	AE = mod2(e) + cos(theta0)
+    AE = AE/(1.0d0+((mod2(e))*cos(theta)))
+	AE = acos(AE)
+
+    sector = dot_product(e,e)
+    sector = (1.0d0 - sector)**0.5d0   
+	sector = sector * sin(theta)
+    sector = sector / (1.0d0- (mod2(e)*cos(theta)))
+       
+	if (sector<0.0d0) then
+    	AE = -AE
+	end if
+
+    if (AE<0.0d0) then
+      AE = 2.0d0*pi - AE
+    end if 
+
+
+	tau = - ((AE - mod2(e)*sin(AE))/n)
+    
+	M0 = - n*tau
+
+    p = dot_product(h,h)/mu
+
+	    i = acos(dot_product(k1,u3))
+
+	n1 = cross(k1,u3)
+    n1 = n1/mod2(n1)
+
+    longnodasc = acos(dot_product(i1,n1))
+
+    argper = asin(dot_product(u3,cross(n1,u1)))
+    if (argper<0) then
+      argper = (2.0d0*pi)+argper
+    end if
+
+	call system ("cls")
+
+	write(*,*) "---------------------------------------"
+    write(*,*) "---------------------------------------"
+
+    write(*,*) "Los elementos clasicos de la orbita son"
+	print*
+    write(*,*) "Excentricidad"
+	write(*,*) mod2(e)
+    print*
+    write(*,*) "Semieje mayor"
+	write(*,*) a , "Km"
+    print*
+    write(*,*) "Inclinacion"    
+	write(*,*) i , "rad"
+    print*
+    write(*,*) "Longitud recta del nodo ascendente"
+    write(*,*) longnodasc , "rad"
+    print*
+    write(*,*) "Argumento del perigeo"
+    write(*,*) argper, "rad"
+    print*
+    write(*,*) "Tiempo de paso por el perigeo"
+    write(*,*) tau, "segundos"
+    print*
+    
+    write(*,*) "---------------------------------------"
+    write(*,*) "---------------------------------------"
+	
+	print*
+  	write(*,*) "Cuanto desea propagar la orbita?"
+	read(*,*) tiempo
+    print*
+    write(*,*) "(s)egundos, (m)inutos, (h)oras, (d)ias ?"
+    read(*,*) propagacion(1)
+    print*
+	
+
+	write(*,*) propagacion(1)
+    print*
+
+	if (propagacion(1) == "m") then
+    tiempo = tiempo * 60.0d0
+    end if
+    if (propagacion(1) == "h") then
+	tiempo = tiempo*3600.0d0
+    end if
+    if (propagacion(1) == "d") then
+	tiempo = tiempo*3600.0d0*24.0d0
+    end if
+
+    M = n * (tiempo - tau)
+
+	j=0
+    do
+		if (M< 2.0d0*pi) exit
+          M = M - 2.0d0*pi
+          j = j+1
+   	end do
+
+  
+	call newtonkep(M,mod2(e),M,0.0000001d0,u,error)
+
+	if (error>0) then
+    	write(*,*) "Error en la subrutina" 
+    end if
+
+
+
+	theta = dot_product(e,e)
+    theta = (1.0d0 - theta)**0.5d0   
+	theta = theta * sin(u)
+    theta = theta / (1.0d0- (mod2(e)*cos(u)))
+    theta = asin(theta)
+
+    sector = cos(u) - mod2(e)
+    sector = sector/(1.0d0 - mod2(e)*cos(u))
+
+    if (sector<0.0d0) then
+      theta =  pi - theta 
+    end if
+
+
+    if (theta<0) then
+      theta = 2.0d0 * pi + theta
+    end if
+
+	dist = a * (1.0d0 - dot_product(e,e))
+    dist = dist/(1.0d0 + mod2(e)*cos(theta))
+
+	r(1) = dist*cos(theta)
+    r(2) = dist*sin(theta)
+    r(3) = 0.0d0
+
+    write(*,*) theta
+    write(*,*) dist
+    print*
+
+    r = girozxz(r,longnodasc,i,argper)
+
+    v(1) = -mu*sin(theta)/mod2(h)
+    v(2) = mu*(mod2(e)+cos(theta))/mod2(h)
+    v(3) = 0.0d0
+
+    v = girozxz(v,longnodasc,i,argper)
+
+	write(*,*) "El satelite esta en el punto (Km)"
+    print*
+    write(*,*) r
+    print*
+    write(*,*) "de la referencia inercial, con velocidad (Km/s)"
+    print*
+	write(*,*) v
+    print*
+	write(*,*) "tras haber recorrido la orbita", j, " veces"
+
+    pause
+
+end program
+
+!subroutine cross(A,B,C)
+
+
+!real*8 :: C(3)
+!real*8 :: A(3)
+!real*8 :: B(3)
+
+!C = 0.0d0
+!C(1) = (A(2)*B(3))-(B(2)*A(3))
+!C(2) = (A(3)*B(1))-(A(1)*B(3))
+!C(3) = (A(1)*B(2))-(A(2)*B(1))
+
+!end subroutine
+
+function cross(A,B)
+
+real*8 :: cross(3)
+real*8 :: A(3)
+real*8 :: B(3)
+
+cross = 0.0d0
+cross(1) = (A(2)*B(3))-(B(2)*A(3))
+cross(2) = (A(3)*B(1))-(A(1)*B(3))
+cross(3) = (A(1)*B(2))-(A(2)*B(1))
+
+end function
+
+!subroutine mod2(A,b)
+!	real*8:: b
+!    real*8:: A(:)
+
+!    b=sqrt(dot_product(A,A))
+
+!end subroutine
+
+function mod2(A)
+
+	real*8:: mod2
+    real*8:: A(:)
+
+    mod2=sqrt(dot_product(A,A))
+end function
+
+function girozxz(A,alpha, beta, gamma)
+
+!Giro en z, x, z,  p.e. perifocal -> inercial  Los angulos en sentido inverso del giro, es decir, Inercial --> Perifocal
+
+	real*8:: girozxz(3)
+    real*8:: A(:)
+    real*8:: alpha
+    real*8:: beta
+    real*8:: gamma
+	real*8:: giro(3,3)
+
+		giro(1,1) =  (cos(alpha) * cos(gamma)) - (sin(alpha) * sin(gamma) * cos(beta))
+		giro(1,2) = -(cos(alpha) * sin(gamma)) - (sin(alpha) * cos(gamma) * cos(beta))
+		giro(1,3) =  							 (sin(gamma) * sin(beta))
+		giro(2,1) =  (sin(alpha) * cos(gamma)) + (cos(alpha) * sin(gamma) * cos(beta))
+		giro(2,2) = -(sin(alpha) * sin(gamma)) + (cos(alpha) * cos(gamma) * cos(beta))
+		giro(2,3) = 						   - (cos(alpha) * sin(beta))
+		giro(3,1) = 							 (sin(gamma) * sin(beta))
+		giro(3,2) = 						     (cos(gamma) * sin(beta))
+		giro(3,3) = 						      cos(beta)
+
+		
+		girozxz = matmul(giro,A)
+
+
+end function
+
+SUBROUTINE newtonkep(x0,e,M,tol,raiz,clave)
+! ---------------------------------------------------
+! Metodo DE NEWTON-RAPHSON para encontrar una
+! solución de f(x)=0 dada la función derivable
+! f y una aproximación inicial x0.
+! ---------------------------------------------------
+! Bloque de declaración de argumentos
+! ---------------------------------------------------
+IMPLICIT NONE
+
+	interface
+function kepler(u,e,M)
+
+implicit none
+real*8:: u
+real*8:: e
+real*8:: M
+real*8:: kepler
+end function
+
+function dkepler(u,e,M)
+
+real*8:: u
+real*8:: e
+real*8:: M
+real*8:: dkepler
+end function
+
+
+    end interface
+
+REAL*8, INTENT(IN) :: x0 ! Aproximación inicial a la raíz
+real*8 :: e
+real*8 :: M
+INTEGER:: n ! Límite de iteraciones/iteraciones realizadas
+REAL*8, INTENT(IN) :: tol ! Tolerancia para el error relativo
+REAL*8, INTENT(OUT) :: raiz ! Aproximación a la raíz
+INTEGER, INTENT(OUT) :: clave ! Clave de éxito:
+! 0 : éxito
+! >0 : iteraciones excedidas
+! ---------------------------------------------------
+! Declaración de variables locales
+! ---------------------------------------------------
+INTEGER :: i
+REAL*8 :: xx0
+! ---------------------------------------------------
+! Bloque de procesamiento
+! ---------------------------------------------------
+n=30
+
+
+clave = 1
+xx0 = x0
+DO i=1,n
+raiz = xx0 - kepler(xx0,e,M)/dkepler(xx0,e,M)
+IF (ABS((raiz-xx0)/raiz) < tol ) THEN
+clave = 0
+n = i
+EXIT
+ENDIF
+xx0 = raiz
+END DO
+RETURN
+END SUBROUTINE newtonkep
+
+
+function kepler(u,e,M)
+
+implicit none
+real*8:: u
+real*8:: e
+real*8:: M
+real*8:: kepler
+
+kepler = u - (e*sin(u)) - M
+
+end function
+
+function dkepler(u,e,M)
+
+real*8:: u
+real*8:: e
+real*8:: M
+real*8:: dkepler
+
+dkepler = 1 - (e*cos(u))
+
+end function
